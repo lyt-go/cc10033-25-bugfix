@@ -470,7 +470,11 @@ def test_quality_check():
 
     result = svc.run_check(entry["id"])
     check(result is not None, "quality_check run_check returns result")
-    check(result.get("status") in ("通过", "未通过"), f"quality_check status: {result.get('status')}")
+    # 老调用方省略样本字段：保留模拟预览，状态为执行中并明确 simulated 标记，
+    # 不再登记实际样本数，也不能作为放行凭据。
+    check(result.get("simulated") is True, "quality_check omitted samples keeps simulated preview")
+    check(result.get("status") == "执行中", f"quality_check preview status: {result.get('status')}")
+    check(entry.get("_actual_sample_count") == 0, "simulated preview must not register actual samples")
     check("results" in result, "quality_check run_check has results")
 
     if result["status"] == "通过":
